@@ -1,0 +1,43 @@
+Overview:
+
+This program controls a National Instruments USB-6210 Data Acquisition Device (M Series). 
+The DAQ counts the number of frame triggers from a 2P Microscope and outputs a 5V TTL signal to an LED in order to sync the frames of the microscope with another camera which operates with a different frame rate. 
+
+Logic:
+
+A frame trigger is sent to the DAQ in terminal 1 (PFI 0). This terminal corresponds to Counter 0 Input, which will count the number of frame triggers received. 100 Frame triggers means 100 frames have been captured by the microscope. Every 100 frames, a 5V TTL signal is sent from Counter 1 Output through Terminal 7 (PFI 5) into the LED light. 
+
+The Terminal Count of Counter 0 holds the number of frame triggers received. We take the Terminal Count and perform a modulo 100 operation. When the remainder is 0, the Terminal Count must be some multiple of 100. The reason why this approach was taken is because resetting the Terminal Count back to 0 is non-trivial and requires more complex logic. 
+
+There is a second check that ensures that the Terminal Count is greater than 0. This fixes the bug of the lights flickering in the beginning. 
+
+Modulo Example:
+10 mod 3 = 1 (remainder)
+200 mod 100 = 0 (remainder). When remainder is 0, output the TTL signal.
+
+
+Notes:
+
+To run the program, open up Frame_Trigger_Synchronization.vi and click the ⇒ arrow to begin listening for frame triggers. Next, open Prairie View and activate Live Scan. It is important that we run the program first so we do not lose any frames. 
+
+The DAQ has two built-in counters, Counter 0 and Counter 1. Counter 0 is being used as input and reads the frame triggers. Counter 1 is being used as output and sends out the TTL signal. 
+
+The edges we are counting are digital signals coming from the microscope’s frame triggers. Counters cannot do simultaneous input and output. This is why we must use both counter 0 and counter 1 to perform simultaneous input and output respectively. 
+
+DAQ Assistant 1 corresponds to Counter 0. DAQ Assistant 2 corresponds to Counter 1. 
+
+The output signal is a 5V TTL Signal. It has a high/low time of 100ms. This can be adjusted by double-clicking on DAQ Assistant 2. 
+
+The terminal count cannot be reset without stopping the program and restarting it. This was a major hurdle and is bypassed by performing modulo operations on the terminal count. 
+
+The Loop Time describes how quickly we should be reading for frame triggers. A high loop time (100ms) caused us to lose some of the frame triggers. By default, it is 10ms. 
+
+Frame Number To Sync can be changed to determine on which frames we want the light to flash. By default it is 100. 
+
+
+References:
+
+NI-USB 6210 Manual 
+See: 
+Chapter 8: Default Counter / Timer Pinouts for PFI/Terminal information
+Chapter 8: Counter Input Applications (Counting Edges)
